@@ -1,0 +1,41 @@
+name: Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '18.x'
+        
+    - name: Install and Build - Client
+      run: |
+        cd client
+        npm install
+        npm run build
+        
+    - name: Install - Server
+      run: |
+        cd server
+        npm install
+        
+    - name: Copy client build to server
+      run: |
+        mkdir -p server/public
+        cp -r client/dist/* server/public/
+        
+    - name: Deploy to Azure Web App
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: 'parking-yahan'
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+        package: ./server
